@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: janus-backend
+  profiles:
+    default: local
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
