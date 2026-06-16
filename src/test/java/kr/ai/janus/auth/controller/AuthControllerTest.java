@@ -2,13 +2,16 @@ package kr.ai.janus.auth.controller;
 
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.time.Instant;
+import java.util.Optional;
 import kr.ai.janus.auth.dto.TokenResponse;
 import kr.ai.janus.auth.service.AuthService;
+import kr.ai.janus.auth.service.TokenVerifier;
 import kr.ai.janus.common.exception.RejoinRestrictedException;
 import kr.ai.janus.config.CorsProperties;
 import kr.ai.janus.config.SecurityConfig;
@@ -18,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -31,6 +35,8 @@ class AuthControllerTest {
     MockMvc mockMvc;
     @MockitoBean
     AuthService authService;
+    @MockitoBean
+    TokenVerifier tokenVerifier;
 
     @Test
     @DisplayName("유효한 요청이면 200과 accessToken을 반환한다")
@@ -90,5 +96,23 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{"))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @DisplayName("유효한 토큰이면 /auth/me가 userId를 반환한다")
+    void me() throws Exception {
+        given(tokenVerifier.parseUserId("valid-token")).willReturn(Optional.of(7L));
+
+        mockMvc.perform(get("/auth/me").header(HttpHeaders.AUTHORIZATION, "Bearer valid-token"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.userId").value(7));
+    }
+
+    @Test
+    @DisplayName("토큰이 없으면 /auth/me는 401을 반환한다")
+    void meWithoutToken() throws Exception {
+        mockMvc.perform(get("/auth/me"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("UNAUTHORIZED"));
     }
 }
