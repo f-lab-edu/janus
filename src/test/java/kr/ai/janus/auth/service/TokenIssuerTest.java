@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.mock;
 
+import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jose.crypto.MACVerifier;
 import com.nimbusds.jwt.SignedJWT;
 import java.time.Clock;
@@ -27,7 +28,8 @@ class TokenIssuerTest {
         Instant now = Instant.parse("2026-01-01T00:00:00Z");
         Clock clock = Clock.fixed(now, ZoneOffset.UTC);
         Duration validity = Duration.ofHours(1);
-        TokenIssuer tokenIssuer = new TokenIssuer(new JwtProperties(SECRET, validity), clock);
+        MACSigner signer = new MACSigner(Base64.getDecoder().decode(SECRET));
+        TokenIssuer tokenIssuer = new TokenIssuer(signer, new JwtProperties(SECRET, validity), clock);
 
         UserAccount user = mock(UserAccount.class);
         given(user.getId()).willReturn(42L);

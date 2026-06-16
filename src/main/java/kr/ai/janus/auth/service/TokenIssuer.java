@@ -4,14 +4,12 @@ import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
 import com.nimbusds.jose.JWSHeader;
 import com.nimbusds.jose.JWSSigner;
-import com.nimbusds.jose.KeyLengthException;
 import com.nimbusds.jose.crypto.MACSigner;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Base64;
 import java.util.Date;
 import kr.ai.janus.auth.JwtProperties;
 import kr.ai.janus.user.entity.UserAccount;
@@ -26,8 +24,8 @@ public class TokenIssuer {
     private final Duration validity;
     private final Clock clock;
 
-    public TokenIssuer(JwtProperties properties, Clock clock) {
-        this.signer = createSigner(properties.secret());
+    public TokenIssuer(MACSigner jwtSigner, JwtProperties properties, Clock clock) {
+        this.signer = jwtSigner;
         this.validity = properties.accessTokenValidity();
         this.clock = clock;
     }
@@ -46,13 +44,5 @@ public class TokenIssuer {
             throw new IllegalStateException("JWT 서명에 실패했습니다.", e);
         }
         return jwt.serialize();
-    }
-
-    private JWSSigner createSigner(String secret) {
-        try {
-            return new MACSigner(Base64.getDecoder().decode(secret));
-        } catch (KeyLengthException e) {
-            throw new IllegalStateException("JWT secret 길이가 부족합니다.", e);
-        }
     }
 }
