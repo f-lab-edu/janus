@@ -12,15 +12,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    // 재가입 제한 — 재가입 가능 시각(availableAt)을 함께 담아 응답
-    @ExceptionHandler(RejoinRestrictedException.class)
-    public ResponseEntity<ErrorResponse> handleRejoinRestricted(RejoinRestrictedException e) {
-        ErrorCode errorCode = e.getErrorCode();
-        return ResponseEntity.status(errorCode.getHttpStatus())
-                .body(ErrorResponse.from(errorCode, e.getAvailableAt()));
-    }
-
-    // 그 외 모든 비즈니스 예외 — ErrorCode에 정의된 상태코드/메시지로 응답
+    // 비즈니스 예외 — ErrorCode에 정의된 상태코드/메시지로 응답
     @ExceptionHandler(BusinessException.class)
     public ResponseEntity<ErrorResponse> handleBusinessException(BusinessException e) {
         ErrorCode errorCode = e.getErrorCode();

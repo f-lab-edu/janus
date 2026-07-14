@@ -5,6 +5,5 @@ create table user_account (
     blocked_at   datetime(6),
     created_at   datetime(6)  not null,
     updated_at   datetime(6)  not null,
-    withdrawn_at datetime(6),
     primary key (id)
 );

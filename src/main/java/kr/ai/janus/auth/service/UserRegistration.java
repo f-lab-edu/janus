@@ -2,7 +2,6 @@ package kr.ai.janus.auth.service;
 
 import java.time.Clock;
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 import kr.ai.janus.auth.OAuthProvider;
 import kr.ai.janus.auth.entity.OAuthAccount;
@@ -13,7 +12,6 @@ import kr.ai.janus.common.exception.ErrorCode;
 import kr.ai.janus.user.entity.UserAccount;
 import kr.ai.janus.user.repository.UserAccountRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,29 +25,21 @@ public class UserRegistration {
 
     @Transactional
     public UserAccount loginOrSignup(OAuthProvider provider, String subject) {
-        Optional<OAuthAccount> existingOauth = oauthAccountRepository.findById(OAuthAccountId.of(provider, subject));
-        return existingOauth.map(this::login)
+        return oauthAccountRepository.findById(OAuthAccountId.of(provider, subject))
+                .map(this::login)
                 .orElseGet(() -> signup(provider, subject));
     }
 
-    @Transactional
-    public UserAccount loginExisting(OAuthProvider provider, String subject, DataIntegrityViolationException cause) {
-        return oauthAccountRepository.findById(OAuthAccountId.of(provider, subject))
-                .map(this::login)
-                .orElseThrow(() -> new BusinessException(ErrorCode.SIGNUP_CONFLICT, cause));
-    }
-
     private UserAccount login(OAuthAccount oauth) {
-        LocalDateTime now = LocalDateTime.now(clock);
         UserAccount user = loadUser(oauth.getUserId());
-        user.onLogin(now);
-        oauth.recordLogin(now);
+        user.onLogin();
+        oauth.recordLogin(LocalDateTime.now(clock));
         return user;
     }
 
     private UserAccount signup(OAuthProvider provider, String subject) {
         UserAccount user = userAccountRepository.save(UserAccount.create());
-        oauthAccountRepository.saveAndFlush(
+        oauthAccountRepository.save(
                 OAuthAccount.register(provider, subject, user.getId(), LocalDateTime.now(clock)));
         return user;
     }

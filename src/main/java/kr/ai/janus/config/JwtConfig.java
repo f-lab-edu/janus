@@ -31,6 +31,10 @@ public class JwtConfig {
     }
 
     private byte[] decodeSecret(JwtProperties properties) {
-        return Base64.getDecoder().decode(properties.secret());
+        try {
+            return Base64.getDecoder().decode(properties.secret());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalStateException("JWT secret이 올바른 Base64 형식이 아닙니다.", e);
+        }
     }
 }

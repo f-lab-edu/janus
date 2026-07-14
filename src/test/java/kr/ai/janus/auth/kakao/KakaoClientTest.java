@@ -5,9 +5,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withException;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withStatus;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
+import java.net.SocketTimeoutException;
 import kr.ai.janus.common.exception.BusinessException;
 import kr.ai.janus.common.exception.ErrorCode;
 import org.junit.jupiter.api.BeforeEach;
@@ -74,6 +76,30 @@ class KakaoClientTest {
         assertThatThrownBy(() -> kakaoClient.fetchProfile("auth-code"))
                 .isInstanceOfSatisfying(BusinessException.class,
                         e -> assertThat(e.getErrorCode()).isEqualTo(ErrorCode.KAKAO_TOKEN_EXCHANGE_FAILED));
+    }
+
+    @Test
+    @DisplayName("토큰 교환이 시간 초과되면 KAKAO_TOKEN_EXCHANGE_FAILED를 던진다")
+    void tokenExchangeTimeout() {
+        server.expect(requestTo(AUTH_URL + "/oauth/token"))
+                .andRespond(withException(new SocketTimeoutException("Read timed out")));
+
+        assertThatThrownBy(() -> kakaoClient.fetchProfile("auth-code"))
+                .isInstanceOfSatisfying(BusinessException.class,
+                        e -> assertThat(e.getErrorCode()).isEqualTo(ErrorCode.KAKAO_TOKEN_EXCHANGE_FAILED));
+    }
+
+    @Test
+    @DisplayName("사용자 정보 조회가 시간 초과되면 KAKAO_PROFILE_FETCH_FAILED를 던진다")
+    void userFetchTimeout() {
+        server.expect(requestTo(AUTH_URL + "/oauth/token"))
+                .andRespond(withSuccess("{\"access_token\":\"at-123\"}", MediaType.APPLICATION_JSON));
+        server.expect(requestTo(API_URL + "/v2/user/me"))
+                .andRespond(withException(new SocketTimeoutException("Read timed out")));
+
+        assertThatThrownBy(() -> kakaoClient.fetchProfile("auth-code"))
+                .isInstanceOfSatisfying(BusinessException.class,
+                        e -> assertThat(e.getErrorCode()).isEqualTo(ErrorCode.KAKAO_PROFILE_FETCH_FAILED));
     }
 
     @Test

@@ -8,12 +8,10 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import java.time.Duration;
 import java.time.LocalDateTime;
 import kr.ai.janus.common.BaseTimeEntity;
 import kr.ai.janus.common.exception.BusinessException;
 import kr.ai.janus.common.exception.ErrorCode;
-import kr.ai.janus.common.exception.RejoinRestrictedException;
 import kr.ai.janus.user.UserStatus;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -24,8 +22,6 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class UserAccount extends BaseTimeEntity {
-
-    private static final Duration REJOIN_RESTRICTION_PERIOD = Duration.ofHours(24);
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -40,8 +36,6 @@ public class UserAccount extends BaseTimeEntity {
 
     private LocalDateTime blockedAt;
 
-    private LocalDateTime withdrawnAt;
-
     private UserAccount(UserStatus status) {
         this.status = status;
     }
@@ -50,36 +44,14 @@ public class UserAccount extends BaseTimeEntity {
         return new UserAccount(UserStatus.ACTIVE);
     }
 
-    public void onLogin(LocalDateTime now) {
-        if (status == UserStatus.WITHDRAWN) {
-            reactivateAfterRestriction(now);
-            return;
-        }
+    public void onLogin() {
         if (status != UserStatus.ACTIVE) {
             throw new BusinessException(ErrorCode.INACTIVE_USER);
         }
     }
 
-    private void reactivateAfterRestriction(LocalDateTime now) {
-        LocalDateTime availableAt = withdrawnAt.plus(REJOIN_RESTRICTION_PERIOD);
-        if (now.isBefore(availableAt)) {
-            throw new RejoinRestrictedException(availableAt);
-        }
-        reactivate();
-    }
-
-    private void reactivate() {
-        this.status = UserStatus.ACTIVE;
-        this.withdrawnAt = null;
-    }
-
     public void block(LocalDateTime at) {
         this.status = UserStatus.BLOCKED;
         this.blockedAt = at;
-    }
-
-    public void withdraw(LocalDateTime at) {
-        this.status = UserStatus.WITHDRAWN;
-        this.withdrawnAt = at;
     }
 }

@@ -7,12 +7,10 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.time.LocalDateTime;
 import java.util.Optional;
 import kr.ai.janus.auth.dto.TokenResponse;
 import kr.ai.janus.auth.service.AuthService;
 import kr.ai.janus.auth.service.TokenVerifier;
-import kr.ai.janus.common.exception.RejoinRestrictedException;
 import kr.ai.janus.config.CorsProperties;
 import kr.ai.janus.config.SecurityConfig;
 import org.junit.jupiter.api.DisplayName;
@@ -60,21 +58,6 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.fieldErrors[0].field").value("code"));
 
         then(authService).shouldHaveNoInteractions();
-    }
-
-    @Test
-    @DisplayName("재가입 제한이면 409와 재가입 가능 시각(availableAt)을 반환한다")
-    void rejoinRestricted() throws Exception {
-        LocalDateTime availableAt = LocalDateTime.parse("2026-01-02T00:00:00");
-        given(authService.loginWithKakao("auth-code"))
-                .willThrow(new RejoinRestrictedException(availableAt));
-
-        mockMvc.perform(post("/auth/kakao")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"code\":\"auth-code\"}"))
-                .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.code").value("REJOIN_RESTRICTED"))
-                .andExpect(jsonPath("$.availableAt").value("2026-01-02T00:00:00"));
     }
 
     @Test

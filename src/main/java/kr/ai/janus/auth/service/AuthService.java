@@ -4,6 +4,8 @@ import kr.ai.janus.auth.OAuthProvider;
 import kr.ai.janus.auth.dto.TokenResponse;
 import kr.ai.janus.auth.kakao.KakaoClient;
 import kr.ai.janus.auth.kakao.KakaoProfile;
+import kr.ai.janus.common.exception.BusinessException;
+import kr.ai.janus.common.exception.ErrorCode;
 import kr.ai.janus.user.entity.UserAccount;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -19,17 +21,16 @@ public class AuthService {
 
     public TokenResponse loginWithKakao(String code) {
         KakaoProfile profile = kakaoClient.fetchProfile(code);
-        UserAccount user = loginOrSignupWithRetry(OAuthProvider.KAKAO, profile.subject());
+        UserAccount user = loginOrSignup(OAuthProvider.KAKAO, profile.subject());
         return new TokenResponse(tokenIssuer.issue(user));
     }
 
-    private UserAccount loginOrSignupWithRetry(OAuthProvider provider, String subject) {
+    private UserAccount loginOrSignup(OAuthProvider provider, String subject) {
         try {
             return userRegistration.loginOrSignup(provider, subject);
         } catch (DataIntegrityViolationException e) {
-            // 동시 가입 PK 충돌이면 먼저 가입된 계정으로 로그인하고,
-            // 없으면 다른 제약 위반이므로 원인을 그대로 남긴다.
-            return userRegistration.loginExisting(provider, subject, e);
+            // 동시 첫 로그인 경쟁에서 진 요청 — 계정 정합성은 PK가 보장하므로 재시도만 안내한다
+            throw new BusinessException(ErrorCode.SIGNUP_CONFLICT, e);
         }
     }
 }

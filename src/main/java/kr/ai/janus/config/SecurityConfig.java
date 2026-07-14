@@ -3,6 +3,7 @@ package kr.ai.janus.config;
 import tools.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.List;
 import kr.ai.janus.auth.JwtAuthenticationFilter;
 import kr.ai.janus.auth.service.TokenVerifier;
@@ -30,12 +31,9 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private static final List<String> ALLOWED_METHODS = List.of(
-            HttpMethod.GET.name(),
-            HttpMethod.POST.name(),
-            HttpMethod.PUT.name(),
-            HttpMethod.PATCH.name(),
-            HttpMethod.DELETE.name());
+    private static final List<String> ALLOWED_METHODS = Arrays.stream(HttpMethod.values())
+            .map(HttpMethod::name)
+            .toList();
     private static final List<String> ALLOWED_HEADERS = List.of(
             HttpHeaders.CONTENT_TYPE,
             HttpHeaders.AUTHORIZATION);
