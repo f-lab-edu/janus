@@ -5,7 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Duration;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import kr.ai.janus.common.exception.BusinessException;
 import kr.ai.janus.common.exception.ErrorCode;
 import kr.ai.janus.common.exception.RejoinRestrictedException;
@@ -15,14 +15,14 @@ import org.junit.jupiter.api.Test;
 
 class UserAccountTest {
 
-    private static final Instant WITHDRAWN_AT = Instant.parse("2026-01-01T00:00:00Z");
+    private static final LocalDateTime WITHDRAWN_AT = LocalDateTime.parse("2026-01-01T00:00:00");
 
     @Test
     @DisplayName("ACTIVE 유저는 로그인할 수 있다")
     void activeCanLogin() {
         UserAccount user = UserAccount.create();
 
-        assertThatCode(() -> user.onLogin(Instant.parse("2026-06-01T00:00:00Z")))
+        assertThatCode(() -> user.onLogin(LocalDateTime.parse("2026-06-01T00:00:00")))
                 .doesNotThrowAnyException();
         assertThat(user.getStatus()).isEqualTo(UserStatus.ACTIVE);
     }
@@ -33,7 +33,7 @@ class UserAccountTest {
         UserAccount user = UserAccount.create();
         user.block(WITHDRAWN_AT);
 
-        assertThatThrownBy(() -> user.onLogin(Instant.parse("2026-06-01T00:00:00Z")))
+        assertThatThrownBy(() -> user.onLogin(LocalDateTime.parse("2026-06-01T00:00:00")))
                 .isInstanceOfSatisfying(BusinessException.class,
                         e -> assertThat(e.getErrorCode()).isEqualTo(ErrorCode.INACTIVE_USER));
     }
@@ -43,7 +43,7 @@ class UserAccountTest {
     void withdrawnWithinRestrictionRejected() {
         UserAccount user = UserAccount.create();
         user.withdraw(WITHDRAWN_AT);
-        Instant now = WITHDRAWN_AT.plus(Duration.ofHours(23));
+        LocalDateTime now = WITHDRAWN_AT.plus(Duration.ofHours(23));
 
         assertThatThrownBy(() -> user.onLogin(now))
                 .isInstanceOfSatisfying(RejoinRestrictedException.class, e -> {
@@ -58,7 +58,7 @@ class UserAccountTest {
     void withdrawnAfterCooldownReactivated() {
         UserAccount user = UserAccount.create();
         user.withdraw(WITHDRAWN_AT);
-        Instant now = WITHDRAWN_AT.plus(Duration.ofHours(24));
+        LocalDateTime now = WITHDRAWN_AT.plus(Duration.ofHours(24));
 
         user.onLogin(now);
 

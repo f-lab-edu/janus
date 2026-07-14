@@ -6,7 +6,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import kr.ai.janus.auth.dto.TokenResponse;
 import kr.ai.janus.auth.service.AuthService;
 import kr.ai.janus.common.exception.RejoinRestrictedException;
@@ -59,7 +59,7 @@ class AuthControllerTest {
     @Test
     @DisplayName("재가입 제한이면 409와 재가입 가능 시각(availableAt)을 반환한다")
     void rejoinRestricted() throws Exception {
-        Instant availableAt = Instant.parse("2026-01-02T00:00:00Z");
+        LocalDateTime availableAt = LocalDateTime.parse("2026-01-02T00:00:00");
         given(authService.loginWithKakao("auth-code"))
                 .willThrow(new RejoinRestrictedException(availableAt));
 
@@ -68,7 +68,7 @@ class AuthControllerTest {
                         .content("{\"code\":\"auth-code\"}"))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("REJOIN_RESTRICTED"))
-                .andExpect(jsonPath("$.availableAt").value("2026-01-02T00:00:00Z"));
+                .andExpect(jsonPath("$.availableAt").value("2026-01-02T00:00:00"));
     }
 
     @Test

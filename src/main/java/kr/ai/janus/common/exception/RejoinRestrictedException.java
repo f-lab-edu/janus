@@ -1,14 +1,14 @@
 package kr.ai.janus.common.exception;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import lombok.Getter;
 
 @Getter
 public class RejoinRestrictedException extends BusinessException {
 
-    private final Instant availableAt;
+    private final LocalDateTime availableAt;
 
-    public RejoinRestrictedException(Instant availableAt) {
+    public RejoinRestrictedException(LocalDateTime availableAt) {
         super(ErrorCode.REJOIN_RESTRICTED);
         this.availableAt = availableAt;
     }

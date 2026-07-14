@@ -1,7 +1,7 @@
 package kr.ai.janus.auth.service;
 
 import java.time.Clock;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import kr.ai.janus.auth.OAuthProvider;
@@ -40,7 +40,7 @@ public class UserRegistration {
     }
 
     private UserAccount login(OAuthAccount oauth) {
-        Instant now = clock.instant();
+        LocalDateTime now = LocalDateTime.now(clock);
         UserAccount user = loadUser(oauth.getUserId());
         user.onLogin(now);
         oauth.recordLogin(now);
@@ -50,7 +50,7 @@ public class UserRegistration {
     private UserAccount signup(OAuthProvider provider, String subject) {
         UserAccount user = userAccountRepository.save(UserAccount.create());
         oauthAccountRepository.saveAndFlush(
-                OAuthAccount.register(provider, subject, user.getId(), clock.instant()));
+                OAuthAccount.register(provider, subject, user.getId(), LocalDateTime.now(clock)));
         return user;
     }
 

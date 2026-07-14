@@ -9,7 +9,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Duration;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import kr.ai.janus.common.BaseTimeEntity;
 import kr.ai.janus.common.exception.BusinessException;
 import kr.ai.janus.common.exception.ErrorCode;
@@ -38,9 +38,9 @@ public class UserAccount extends BaseTimeEntity {
     @Column(length = 20, nullable = false)
     private UserStatus status;
 
-    private Instant blockedAt;
+    private LocalDateTime blockedAt;
 
-    private Instant withdrawnAt;
+    private LocalDateTime withdrawnAt;
 
     private UserAccount(UserStatus status) {
         this.status = status;
@@ -50,7 +50,7 @@ public class UserAccount extends BaseTimeEntity {
         return new UserAccount(UserStatus.ACTIVE);
     }
 
-    public void onLogin(Instant now) {
+    public void onLogin(LocalDateTime now) {
         if (status == UserStatus.WITHDRAWN) {
             reactivateAfterRestriction(now);
             return;
@@ -60,8 +60,8 @@ public class UserAccount extends BaseTimeEntity {
         }
     }
 
-    private void reactivateAfterRestriction(Instant now) {
-        Instant availableAt = withdrawnAt.plus(REJOIN_RESTRICTION_PERIOD);
+    private void reactivateAfterRestriction(LocalDateTime now) {
+        LocalDateTime availableAt = withdrawnAt.plus(REJOIN_RESTRICTION_PERIOD);
         if (now.isBefore(availableAt)) {
             throw new RejoinRestrictedException(availableAt);
         }
@@ -73,12 +73,12 @@ public class UserAccount extends BaseTimeEntity {
         this.withdrawnAt = null;
     }
 
-    public void block(Instant at) {
+    public void block(LocalDateTime at) {
         this.status = UserStatus.BLOCKED;
         this.blockedAt = at;
     }
 
-    public void withdraw(Instant at) {
+    public void withdraw(LocalDateTime at) {
         this.status = UserStatus.WITHDRAWN;
         this.withdrawnAt = at;
     }
