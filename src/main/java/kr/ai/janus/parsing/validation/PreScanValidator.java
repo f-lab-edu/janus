@@ -7,10 +7,12 @@ import kr.ai.janus.common.exception.BusinessException;
 import kr.ai.janus.common.exception.ErrorCode;
 import kr.ai.janus.parsing.model.PreScanSummary;
 import kr.ai.janus.parsing.model.SpeakerCount;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 1차 스캔 결과 검증
  */
+@Slf4j
 public final class PreScanValidator {
 
     private final PreScanThresholds thresholds;
@@ -29,6 +31,7 @@ public final class PreScanValidator {
                 .toList();
 
         if (topTwo.size() < 2) {
+            log.info("1차 스캔 검증 실패: 화자 {}명 < 2명", topTwo.size());
             throw new BusinessException(ErrorCode.INSUFFICIENT_SPEAKERS);
         }
 
@@ -39,14 +42,20 @@ public final class PreScanValidator {
 
     private void validateTotalMessages(PreScanSummary summary) {
         if (summary.messageCount() < thresholds.minTotalMessages()) {
+            log.info("1차 스캔 검증 실패: 전체 {}건 < 기준 {}건",
+                    summary.messageCount(), thresholds.minTotalMessages());
             throw new BusinessException(ErrorCode.INSUFFICIENT_TOTAL_MESSAGES);
         }
     }
 
     private void validatePerSpeakerMessages(List<SpeakerCount> topTwo) {
-        boolean insufficient = topTwo.stream()
-                .anyMatch(speaker -> speaker.messageCount() < thresholds.minPerSpeakerMessages());
-        if (insufficient) {
+        long minCount = topTwo.stream()
+                .mapToLong(SpeakerCount::messageCount)
+                .min()
+                .orElse(0);
+        if (minCount < thresholds.minPerSpeakerMessages()) {
+            log.info("1차 스캔 검증 실패: 화자별 최소 {}건 < 기준 {}건",
+                    minCount, thresholds.minPerSpeakerMessages());
             throw new BusinessException(ErrorCode.INSUFFICIENT_MESSAGES_PER_SPEAKER);
         }
     }
@@ -57,6 +66,8 @@ public final class PreScanValidator {
                 .sum();
         double share = (double) topTwoMessageCount / summary.messageCount();
         if (share < thresholds.topTwoShareThreshold()) {
+            log.info("1차 스캔 검증 실패: 상위 2인 비율 {} < 기준 {}",
+                    share, thresholds.topTwoShareThreshold());
             throw new BusinessException(ErrorCode.INSUFFICIENT_TOP_TWO_SHARE);
         }
     }
