@@ -3,6 +3,8 @@ package kr.ai.janus.parsing.validation;
 import java.util.Comparator;
 import java.util.List;
 
+import kr.ai.janus.common.exception.BusinessException;
+import kr.ai.janus.common.exception.ErrorCode;
 import kr.ai.janus.parsing.model.PreScanSummary;
 import kr.ai.janus.parsing.model.SpeakerCount;
 
@@ -27,7 +29,7 @@ public final class PreScanValidator {
                 .toList();
 
         if (topTwo.size() < 2) {
-            throw new IllegalArgumentException("분석하려면 최소 두 명의 화자가 필요합니다.");
+            throw new BusinessException(ErrorCode.INSUFFICIENT_SPEAKERS);
         }
 
         validatePerSpeakerMessages(topTwo);
@@ -37,7 +39,7 @@ public final class PreScanValidator {
 
     private void validateTotalMessages(PreScanSummary summary) {
         if (summary.messageCount() < thresholds.minTotalMessages()) {
-            throw new IllegalArgumentException("분석에 필요한 메시지 수가 부족합니다.");
+            throw new BusinessException(ErrorCode.INSUFFICIENT_TOTAL_MESSAGES);
         }
     }
 
@@ -45,7 +47,7 @@ public final class PreScanValidator {
         boolean insufficient = topTwo.stream()
                 .anyMatch(speaker -> speaker.messageCount() < thresholds.minPerSpeakerMessages());
         if (insufficient) {
-            throw new IllegalArgumentException("주요 화자의 메시지 수가 부족합니다.");
+            throw new BusinessException(ErrorCode.INSUFFICIENT_MESSAGES_PER_SPEAKER);
         }
     }
 
@@ -55,7 +57,7 @@ public final class PreScanValidator {
                 .sum();
         double share = (double) topTwoMessageCount / summary.messageCount();
         if (share < thresholds.topTwoShareThreshold()) {
-            throw new IllegalArgumentException("두 사람의 대화로 판단하기 어렵습니다.");
+            throw new BusinessException(ErrorCode.INSUFFICIENT_TOP_TWO_SHARE);
         }
     }
 }
