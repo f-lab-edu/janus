@@ -7,7 +7,14 @@ spring:
     hibernate:
       ddl-auto: validate
     open-in-view: false
-    properties:
-      hibernate:
-        jdbc:
-          time_zone: UTC
+
+kakao:
+  rest-api-key: ${KAKAO_REST_API_KEY}
+  client-secret: ${KAKAO_CLIENT_SECRET}
+  redirect-uri: ${KAKAO_REDIRECT_URI}
+  auth-url: https://kauth.kakao.com
+  api-url: https://kapi.kakao.com
+
+jwt:
+  secret: ${JWT_SECRET}
+  access-token-validity: 1h

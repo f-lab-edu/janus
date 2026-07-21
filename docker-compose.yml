@@ -10,9 +10,11 @@ services:
       MYSQL_USER: ${DB_USERNAME}
       MYSQL_PASSWORD: ${DB_PASSWORD}
       MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
-      TZ: UTC
+      TZ: Asia/Seoul
+    command: --default-time-zone=+09:00
     volumes:
       - janus-mysql-data:/var/lib/mysql
+      - ./src/main/resources/sql:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1"]
       interval: 10s
