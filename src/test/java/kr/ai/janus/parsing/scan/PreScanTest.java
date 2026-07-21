@@ -11,7 +11,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-import kr.ai.janus.parsing.grammar.CsvGrammar;
+import kr.ai.janus.parsing.grammar.CsvMessageParser;
 import kr.ai.janus.parsing.model.PreScanSummary;
 import kr.ai.janus.parsing.model.RawMessage;
 import kr.ai.janus.parsing.model.SpeakerCount;
@@ -81,7 +81,7 @@ class PreScanTest {
         InputStream in = getClass().getClassLoader().getResourceAsStream(path);
         assertThat(in).as("픽스처 %s 존재", path).isNotNull();
         try (Reader reader = new InputStreamReader(in, StandardCharsets.UTF_8)) {
-            return new CsvGrammar().parse(reader);
+            return new CsvMessageParser().parse(reader);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

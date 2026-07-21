@@ -18,6 +18,8 @@ public enum ErrorCode {
     KAKAO_PROFILE_FETCH_FAILED(HttpStatus.BAD_GATEWAY, "카카오 사용자 정보 조회에 실패했습니다."),
 
     // 파싱 관련
+    INVALID_CSV_FORMAT(HttpStatus.BAD_REQUEST, "파일 분석에 실패했습니다. 파일을 확인 후 다시 시도해주세요."),
+    FILE_READ_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "파일을 읽는 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요."),
     INSUFFICIENT_TOTAL_MESSAGES(HttpStatus.BAD_REQUEST, "분석에 필요한 전체 메시지 수가 부족합니다."),
     INSUFFICIENT_SPEAKERS(HttpStatus.BAD_REQUEST, "분석하려면 최소 두 명 이상의 화자가 필요합니다."),
     INSUFFICIENT_MESSAGES_PER_SPEAKER(HttpStatus.BAD_REQUEST, "상위 두 화자 중 한 명의 메시지 수가 부족합니다."),
