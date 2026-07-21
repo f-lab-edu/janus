@@ -16,9 +16,9 @@ import kr.ai.janus.parsing.model.PreScanSummary;
 import kr.ai.janus.parsing.model.RawMessage;
 import kr.ai.janus.parsing.model.SpeakerCount;
 
-class PreScanTest {
+class PreScannerTest {
 
-    private final PreScan preScan = new PreScan();
+    private final PreScanner preScanner = new PreScanner();
 
     private RawMessage message(String speaker, LocalDateTime sentAt) {
         return new RawMessage(speaker, sentAt, "내용");
@@ -32,7 +32,7 @@ class PreScanTest {
                 message("민지", LocalDateTime.of(2026, 2, 10, 10, 2))
         );
 
-        PreScanSummary summary = preScan.summarize(messages);
+        PreScanSummary summary = preScanner.summarize(messages);
 
         assertThat(summary.speakerCounts()).containsExactly(
                 new SpeakerCount("민지", 2),
@@ -49,7 +49,7 @@ class PreScanTest {
                 message("민지", LocalDateTime.of(2026, 2, 11, 23, 0))   // 가장 늦음
         );
 
-        PreScanSummary summary = preScan.summarize(messages);
+        PreScanSummary summary = preScanner.summarize(messages);
 
         assertThat(summary.startedAt()).isEqualTo(LocalDateTime.of(2026, 2, 10, 9, 0));
         assertThat(summary.endedAt()).isEqualTo(LocalDateTime.of(2026, 2, 11, 23, 0));
@@ -57,7 +57,7 @@ class PreScanTest {
 
     @Test
     void 빈_목록에서도_터지지_않고_사실대로_담는다() {
-        PreScanSummary summary = preScan.summarize(List.of());
+        PreScanSummary summary = preScanner.summarize(List.of());
 
         assertThat(summary.messageCount()).isZero();
         assertThat(summary.speakerCounts()).isEmpty();
@@ -69,7 +69,7 @@ class PreScanTest {
     void CSV_파일부터_1차_스캔까지_이어진다() {
         List<RawMessage> messages = parseFixture("fixtures/csv/simple.csv");
 
-        PreScanSummary summary = preScan.summarize(messages);
+        PreScanSummary summary = preScanner.summarize(messages);
 
         assertThat(summary.messageCount()).isEqualTo(10);
         assertThat(summary.speakerCounts())
