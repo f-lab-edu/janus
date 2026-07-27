@@ -23,10 +23,16 @@ public final class PreScanValidator {
         this.thresholds = thresholds;
     }
 
-    public void validate(PreScanSummary summary, String ownerName) {
+    /** 분석 가능한 1:1 대화인지 검증한다 (본인 선택 전 단계에서 사용). */
+    public void validateChat(PreScanSummary summary) {
         validateTotalMessages(summary);
         validateExactlyTwoSpeakers(summary);
         validatePerSpeakerMessages(summary);
+    }
+
+    /** 채팅 검증 + 본인(owner)이 두 화자 중 하나인지까지 검증한다. */
+    public void validate(PreScanSummary summary, String ownerName) {
+        validateChat(summary);
         validateOwnerIsParticipant(summary, ownerName);
     }
 

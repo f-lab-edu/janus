@@ -40,6 +40,31 @@ class PreScanValidatorTest {
     }
 
     @Test
+    void validateChat은_owner_없이_채팅만_검증하고_정상이면_통과한다() {
+        PreScanSummary summary = summaryOf(List.of(
+                new SpeakerCount("민지", 40),
+                new SpeakerCount("지훈", 60)
+        ));
+
+        assertThatCode(() -> validator.validateChat(summary))
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    void validateChat도_화자가_세_명_이상이면_NOT_ONE_TO_ONE_CHAT() {
+        PreScanSummary summary = summaryOf(List.of(
+                new SpeakerCount("민지", 40),
+                new SpeakerCount("지훈", 40),
+                new SpeakerCount("영수", 40)
+        ));
+
+        assertThatThrownBy(() -> validator.validateChat(summary))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.NOT_ONE_TO_ONE_CHAT);
+    }
+
+    @Test
     void 전체_메시지가_하한보다_적으면_INSUFFICIENT_TOTAL_MESSAGES() {
         PreScanSummary summary = summaryOf(List.of(
                 new SpeakerCount("민지", 20),
