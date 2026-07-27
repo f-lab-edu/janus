@@ -1,10 +1,13 @@
 package kr.ai.janus.parsing.model;
 
 /**
- * EXCLUDED(상위 2인 밖 소수 화자)는 통계에서 제외
+ * 1:1 대화의 두 화자 역할
  */
 public enum SpeakerRole {
     OWNER,
-    PARTNER,
-    EXCLUDED
+    PARTNER;
+
+    public static SpeakerRole resolve(String speakerName, String ownerName) {
+        return ownerName.equals(speakerName) ? OWNER : PARTNER;
+    }
 }

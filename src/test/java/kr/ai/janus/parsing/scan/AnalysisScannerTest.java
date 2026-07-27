@@ -11,15 +11,13 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-import kr.ai.janus.parsing.classify.MessageTypeClassifier;
 import kr.ai.janus.parsing.grammar.CsvMessageParser;
 import kr.ai.janus.parsing.model.ParseStats;
 import kr.ai.janus.parsing.model.RawMessage;
-import kr.ai.janus.parsing.model.SpeakerMapping;
 
-class ChatStatsAnalyzerTest {
+class AnalysisScannerTest {
 
-    private final ChatStatsAnalyzer analyzer = new ChatStatsAnalyzer(new MessageTypeClassifier());
+    private final AnalysisScanner scanner = new AnalysisScanner();
 
     private RawMessage message(String speaker, LocalDateTime sentAt, String text) {
         return new RawMessage(speaker, sentAt, text);
@@ -33,27 +31,11 @@ class ChatStatsAnalyzerTest {
                 message("민지", LocalDateTime.of(2026, 2, 10, 10, 2), "뭐해")
         );
 
-        ParseStats stats = analyzer.analyze(messages, new SpeakerMapping("민지", "지훈"));
+        ParseStats stats = scanner.scan(messages, "민지");
 
         assertThat(stats.ownerCount()).isEqualTo(2);
         assertThat(stats.partnerCount()).isEqualTo(1);
         assertThat(stats.analyzedMessages()).isEqualTo(3);
-    }
-
-    @Test
-    void EXCLUDED_화자의_메시지는_모든_통계에서_빠진다() {
-        List<RawMessage> messages = List.of(
-                message("민지", LocalDateTime.of(2026, 2, 10, 10, 0), "안녕"),
-                message("지훈", LocalDateTime.of(2026, 2, 10, 10, 1), "안녕!"),
-                // 소수 화자 — 기간·활성일에도 영향을 주면 안 된다
-                message("영수", LocalDateTime.of(2026, 3, 1, 23, 0), "저도 끼어도 되나요")
-        );
-
-        ParseStats stats = analyzer.analyze(messages, new SpeakerMapping("민지", "지훈"));
-
-        assertThat(stats.analyzedMessages()).isEqualTo(2);
-        assertThat(stats.endedAt()).isEqualTo(LocalDateTime.of(2026, 2, 10, 10, 1));
-        assertThat(stats.activeDayCount()).isEqualTo(1);
     }
 
     @Test
@@ -64,7 +46,7 @@ class ChatStatsAnalyzerTest {
                 message("민지", LocalDateTime.of(2026, 2, 10, 10, 2), "사진 3장")
         );
 
-        ParseStats stats = analyzer.analyze(messages, new SpeakerMapping("민지", "지훈"));
+        ParseStats stats = scanner.scan(messages, "민지");
 
         assertThat(stats.textCount()).isEqualTo(1);
         assertThat(stats.emoticonCount()).isEqualTo(1);
@@ -75,7 +57,7 @@ class ChatStatsAnalyzerTest {
     void CSV_파일부터_2차_스캔까지_이어져_전체_통계가_나온다() {
         List<RawMessage> messages = parseFixture("fixtures/csv/simple.csv");
 
-        ParseStats stats = analyzer.analyze(messages, new SpeakerMapping("민지", "지훈"));
+        ParseStats stats = scanner.scan(messages, "민지");
 
         assertThat(stats.ownerCount()).isEqualTo(5);
         assertThat(stats.partnerCount()).isEqualTo(5);

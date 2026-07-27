@@ -1,6 +1,6 @@
 package kr.ai.janus.parsing.validation;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.LocalDateTime;
@@ -16,9 +16,8 @@ import kr.ai.janus.parsing.model.SpeakerCount;
 class PreScanValidatorTest {
 
     private final PreScanValidator validator =
-            new PreScanValidator(PreScanThresholds.defaults());  // 50, 10, 0.95
+            new PreScanValidator(PreScanThresholds.defaults());  // 50, 10
 
-    /** 검증에 필요한 최소 조건을 만족하는 정상 요약 */
     private PreScanSummary summaryOf(List<SpeakerCount> speakers) {
         long total = speakers.stream().mapToLong(SpeakerCount::messageCount).sum();
         return new PreScanSummary(
@@ -30,28 +29,14 @@ class PreScanValidatorTest {
     }
 
     @Test
-    void 조건을_만족하면_상위_2인을_많은_순으로_돌려준다() {
+    void 정확히_두_명이고_owner가_그중_하나면_통과한다() {
         PreScanSummary summary = summaryOf(List.of(
                 new SpeakerCount("민지", 40),
                 new SpeakerCount("지훈", 60)
         ));
 
-        List<SpeakerCount> topTwo = validator.validateAndSelectParticipants(summary);
-
-        assertThat(topTwo).extracting(SpeakerCount::name).containsExactly("지훈", "민지");
-    }
-
-    @Test
-    void 소수_화자가_섞여도_상위_2인만_뽑는다() {
-        PreScanSummary summary = summaryOf(List.of(
-                new SpeakerCount("민지", 500),
-                new SpeakerCount("지훈", 500),
-                new SpeakerCount("민지🩷", 20)   // 이름 잔재 — 상위 2인에서 제외
-        ));
-
-        List<SpeakerCount> topTwo = validator.validateAndSelectParticipants(summary);
-
-        assertThat(topTwo).extracting(SpeakerCount::name).containsExactly("민지", "지훈");
+        assertThatCode(() -> validator.validate(summary, "민지"))
+                .doesNotThrowAnyException();
     }
 
     @Test
@@ -61,7 +46,7 @@ class PreScanValidatorTest {
                 new SpeakerCount("지훈", 20)   // 합 40 < 50
         ));
 
-        assertThatThrownBy(() -> validator.validateAndSelectParticipants(summary))
+        assertThatThrownBy(() -> validator.validate(summary, "민지"))
                 .isInstanceOf(BusinessException.class)
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.INSUFFICIENT_TOTAL_MESSAGES);
@@ -73,41 +58,49 @@ class PreScanValidatorTest {
                 new SpeakerCount("민지", 100)   // 혼자
         ));
 
-        assertThatThrownBy(() -> validator.validateAndSelectParticipants(summary))
+        assertThatThrownBy(() -> validator.validate(summary, "민지"))
                 .isInstanceOf(BusinessException.class)
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.INSUFFICIENT_SPEAKERS);
     }
 
     @Test
-    void 상위_2인_중_한_명이_최소_미달이면_INSUFFICIENT_MESSAGES_PER_SPEAKER() {
+    void 화자가_세_명_이상이면_NOT_ONE_TO_ONE_CHAT() {
+        PreScanSummary summary = summaryOf(List.of(
+                new SpeakerCount("민지", 40),
+                new SpeakerCount("지훈", 40),
+                new SpeakerCount("영수", 40)   // 단톡
+        ));
+
+        assertThatThrownBy(() -> validator.validate(summary, "민지"))
+                .isInstanceOf(BusinessException.class)
+                .extracting("errorCode")
+                .isEqualTo(ErrorCode.NOT_ONE_TO_ONE_CHAT);
+    }
+
+    @Test
+    void 두_명_중_한_명이_최소_미달이면_INSUFFICIENT_MESSAGES_PER_SPEAKER() {
         PreScanSummary summary = summaryOf(List.of(
                 new SpeakerCount("민지", 95),
                 new SpeakerCount("지훈", 5)   // 5 < 10
         ));
 
-        assertThatThrownBy(() -> validator.validateAndSelectParticipants(summary))
+        assertThatThrownBy(() -> validator.validate(summary, "민지"))
                 .isInstanceOf(BusinessException.class)
                 .extracting("errorCode")
                 .isEqualTo(ErrorCode.INSUFFICIENT_MESSAGES_PER_SPEAKER);
     }
 
     @Test
-    void 상위_2인_점유율이_낮으면_INSUFFICIENT_TOP_TWO_SHARE() {
-        // 상위 2인 60 / 전체 200 = 30% < 95% → 단톡으로 간주
+    void 선택한_본인이_화자가_아니면_UNKNOWN_SPEAKER() {
         PreScanSummary summary = summaryOf(List.of(
-                new SpeakerCount("민지", 30),
-                new SpeakerCount("지훈", 30),
-                new SpeakerCount("철수", 30),
-                new SpeakerCount("영희", 30),
-                new SpeakerCount("동수", 30),
-                new SpeakerCount("수민", 30),
-                new SpeakerCount("기타", 20)
+                new SpeakerCount("민지", 40),
+                new SpeakerCount("지훈", 60)
         ));
 
-        assertThatThrownBy(() -> validator.validateAndSelectParticipants(summary))
+        assertThatThrownBy(() -> validator.validate(summary, "철수"))   // 참여자 아님
                 .isInstanceOf(BusinessException.class)
                 .extracting("errorCode")
-                .isEqualTo(ErrorCode.INSUFFICIENT_TOP_TWO_SHARE);
+                .isEqualTo(ErrorCode.UNKNOWN_SPEAKER);
     }
 }

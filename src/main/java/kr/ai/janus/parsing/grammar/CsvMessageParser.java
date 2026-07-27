@@ -8,6 +8,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -25,6 +26,9 @@ import lombok.extern.slf4j.Slf4j;
 public final class CsvMessageParser {
 
     private static final char BOM = '\uFEFF';
+    private static final String DATE_HEADER = "Date";
+    private static final String USER_HEADER = "User";
+    private static final String MESSAGE_HEADER = "Message";
     private static final DateTimeFormatter DATE_FORMAT =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private static final CSVFormat FORMAT = CSVFormat.DEFAULT.builder()
@@ -35,7 +39,9 @@ public final class CsvMessageParser {
     public List<RawMessage> parse(Reader reader) {
         List<RawMessage> messages = new ArrayList<>();
 
-        try (CSVParser parser = CSVParser.parse(stripBom(reader), FORMAT)) {
+        try (CSVParser parser = CSVParser.parse(removeBom(reader), FORMAT)) {
+            validateHeaders(parser);
+
             for (CSVRecord csvRow : parser) {
                 messages.add(toMessage(csvRow));
             }
@@ -47,11 +53,22 @@ public final class CsvMessageParser {
         return messages;
     }
 
+    private void validateHeaders(CSVParser parser) {
+        List<String> headers = parser.getHeaderNames();
+
+        if (!headers.contains(USER_HEADER)
+                || !headers.contains(MESSAGE_HEADER)
+                || !headers.contains(DATE_HEADER)) {
+            log.warn("CSV 필수 컬럼 없음: {}", headers);
+            throw new BusinessException(ErrorCode.INVALID_CSV_FORMAT);
+        }
+    }
+
     private RawMessage toMessage(CSVRecord csvRow) {
         try {
-            String speakerName = csvRow.get("User");
-            String text = csvRow.get("Message");
-            LocalDateTime sentAt = parseSentAt(csvRow.get("Date"));
+            String speakerName = csvRow.get(USER_HEADER);
+            String text = csvRow.get(MESSAGE_HEADER);
+            LocalDateTime sentAt = parseSentAt(csvRow.get(DATE_HEADER));
             return new RawMessage(speakerName, sentAt, text);
         } catch (IllegalArgumentException | DateTimeParseException e) {
             log.warn("CSV {}번째 행 파싱 실패", csvRow.getRecordNumber(), e);
@@ -63,13 +80,17 @@ public final class CsvMessageParser {
         return LocalDateTime.parse(raw.trim(), DATE_FORMAT);
     }
 
-    /** 파일 맨 앞의 BOM이 있으면 건너뛴다. 없으면 그대로 둔다. */
-    private Reader stripBom(Reader in) throws IOException {
-        PushbackReader pushback = new PushbackReader(in, 1);
-        int first = pushback.read();
-        if (first != -1 && first != BOM) {
-            pushback.unread(first);
+    /** 파일 맨 앞에 붙는 보이지 않는 문자(BOM)가 있으면 건너뛴다. 없으면 그대로 둔다. */
+    private Reader removeBom(Reader in) throws IOException {
+        PushbackReader reader = new PushbackReader(in, 1);
+        int first = reader.read();
+        if (isNormalChar(first)) {
+            reader.unread(first);   // BOM이 아니면 읽은 문자를 되돌려 놓는다
         }
-        return pushback;
+        return reader;
+    }
+
+    private boolean isNormalChar(int character) {
+        return character != -1 && character != BOM;
     }
 }

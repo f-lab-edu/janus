@@ -21,9 +21,10 @@ public enum ErrorCode {
     INVALID_CSV_FORMAT(HttpStatus.BAD_REQUEST, "파일 분석에 실패했습니다. 파일을 확인 후 다시 시도해주세요."),
     FILE_READ_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "파일을 읽는 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요."),
     INSUFFICIENT_TOTAL_MESSAGES(HttpStatus.BAD_REQUEST, "분석에 필요한 전체 메시지 수가 부족합니다."),
-    INSUFFICIENT_SPEAKERS(HttpStatus.BAD_REQUEST, "분석하려면 최소 두 명 이상의 화자가 필요합니다."),
-    INSUFFICIENT_MESSAGES_PER_SPEAKER(HttpStatus.BAD_REQUEST, "상위 두 화자 중 한 명의 메시지 수가 부족합니다."),
-    INSUFFICIENT_TOP_TWO_SHARE(HttpStatus.BAD_REQUEST, "상위 두 화자의 대화 비율이 낮아 1:1 대화로 분석하기 어렵습니다."),
+    INSUFFICIENT_SPEAKERS(HttpStatus.BAD_REQUEST, "대화 상대가 없어요. 두 사람이 주고받은 대화를 올려주세요."),
+    NOT_ONE_TO_ONE_CHAT(HttpStatus.BAD_REQUEST, "1:1 대화만 분석할 수 있어요. 두 사람만의 대화를 올려주세요."),
+    INSUFFICIENT_MESSAGES_PER_SPEAKER(HttpStatus.BAD_REQUEST, "두 사람 중 한 명의 메시지 수가 부족합니다."),
+    UNKNOWN_SPEAKER(HttpStatus.BAD_REQUEST, "선택한 이름을 대화에서 찾을 수 없습니다."),
 
     // 공통
     INVALID_REQUEST(HttpStatus.BAD_REQUEST, "요청이 올바르지 않습니다."),

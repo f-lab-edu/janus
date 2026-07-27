@@ -12,17 +12,21 @@ public final class PreScanner {
 
     public PreScanSummary summarize(List<RawMessage> messages) {
         Map<String, Long> messageCountBySpeaker = new LinkedHashMap<>();
-        MessagePeriodAccumulator period = new MessagePeriodAccumulator();
+        MessagePeriodTracker period = new MessagePeriodTracker();
 
         for (RawMessage message : messages) {
             messageCountBySpeaker.merge(message.speakerName(), 1L, Long::sum);
-            period.accumulate(message.sentAt());
+            period.updateWith(message.sentAt());
         }
 
-        List<SpeakerCount> speakerCounts = messageCountBySpeaker.entrySet().stream()
-                .map(entry -> new SpeakerCount(entry.getKey(), entry.getValue()))
-                .toList();
+        List<SpeakerCount> speakerCounts = toSpeakerCounts(messageCountBySpeaker);
 
         return new PreScanSummary(speakerCounts, period.startedAt(), period.endedAt(), messages.size());
+    }
+
+    private List<SpeakerCount> toSpeakerCounts(Map<String, Long> messageCountBySpeaker) {
+        return messageCountBySpeaker.entrySet().stream()
+                .map(entry -> new SpeakerCount(entry.getKey(), entry.getValue()))
+                .toList();
     }
 }
