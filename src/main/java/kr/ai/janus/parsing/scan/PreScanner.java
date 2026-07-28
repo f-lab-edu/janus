@@ -4,10 +4,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.stereotype.Component;
+
 import kr.ai.janus.parsing.model.PreScanSummary;
 import kr.ai.janus.parsing.model.RawMessage;
 import kr.ai.janus.parsing.model.SpeakerCount;
 
+@Component
 public final class PreScanner {
 
     public PreScanSummary summarize(List<RawMessage> messages) {
