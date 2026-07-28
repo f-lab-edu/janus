@@ -5,7 +5,6 @@ import java.io.PushbackReader;
 import java.io.Reader;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -56,12 +55,16 @@ public final class CsvMessageParser {
     private void validateHeaders(CSVParser parser) {
         List<String> headers = parser.getHeaderNames();
 
-        if (!headers.contains(USER_HEADER)
-                || !headers.contains(MESSAGE_HEADER)
-                || !headers.contains(DATE_HEADER)) {
+        if (!hasRequiredHeaders(headers)) {
             log.warn("CSV 필수 컬럼 없음: {}", headers);
             throw new BusinessException(ErrorCode.INVALID_CSV_FORMAT);
         }
+    }
+
+    private boolean hasRequiredHeaders(List<String> headers) {
+        return headers.contains(USER_HEADER)
+                && headers.contains(MESSAGE_HEADER)
+                && headers.contains(DATE_HEADER);
     }
 
     private RawMessage toMessage(CSVRecord csvRow) {
@@ -70,7 +73,7 @@ public final class CsvMessageParser {
             String text = csvRow.get(MESSAGE_HEADER);
             LocalDateTime sentAt = parseSentAt(csvRow.get(DATE_HEADER));
             return new RawMessage(speakerName, sentAt, text);
-        } catch (IllegalArgumentException | DateTimeParseException e) {
+        } catch (RuntimeException e) {
             log.warn("CSV {}번째 행 파싱 실패", csvRow.getRecordNumber(), e);
             throw new BusinessException(ErrorCode.INVALID_CSV_FORMAT, e);
         }
