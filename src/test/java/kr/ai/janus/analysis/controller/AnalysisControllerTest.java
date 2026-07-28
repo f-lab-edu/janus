@@ -81,4 +81,18 @@ class AnalysisControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("UNKNOWN_SPEAKER"));
     }
+
+    @Test
+    void 파일_파트가_없으면_400() throws Exception {
+        mockMvc.perform(multipart("/analyses/participants"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
+    }
+
+    @Test
+    void ownerName이_없으면_400() throws Exception {
+        mockMvc.perform(multipart("/analyses").file(fixture("fixtures/csv/valid.csv")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
+    }
 }
