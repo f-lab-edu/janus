@@ -2,12 +2,15 @@ package kr.ai.janus.parsing.scan;
 
 import java.util.List;
 
+import org.springframework.stereotype.Component;
+
 import kr.ai.janus.parsing.model.ParseStats;
 import kr.ai.janus.parsing.model.RawMessage;
 
 /**
  * 2차 스캔. 화자, 본인이 정해진 뒤 분석용 통계를 모은다.
  */
+@Component
 public final class AnalysisScanner {
 
     public ParseStats scan(List<RawMessage> messages, String ownerName) {

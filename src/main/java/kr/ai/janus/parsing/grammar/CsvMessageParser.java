@@ -13,6 +13,8 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 
+import org.springframework.stereotype.Component;
+
 import kr.ai.janus.common.exception.BusinessException;
 import kr.ai.janus.common.exception.ErrorCode;
 import kr.ai.janus.parsing.model.RawMessage;
@@ -21,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Mac 카카오톡 CSV(`Date,User,Message`)를 읽어 RawMessage 목록으로 만든다.
  */
+@Component
 @Slf4j
 public final class CsvMessageParser {
 

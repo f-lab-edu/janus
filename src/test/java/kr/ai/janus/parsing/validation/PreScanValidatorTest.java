@@ -15,8 +15,7 @@ import kr.ai.janus.parsing.model.SpeakerCount;
 
 class PreScanValidatorTest {
 
-    private final PreScanValidator validator =
-            new PreScanValidator(PreScanThresholds.defaults());  // 50, 10
+    private final PreScanValidator validator = new PreScanValidator();  // thresholds = defaults() 50, 10
 
     private PreScanSummary summaryOf(List<SpeakerCount> speakers) {
         long total = speakers.stream().mapToLong(SpeakerCount::messageCount).sum();

@@ -1,5 +1,7 @@
 package kr.ai.janus.parsing.validation;
 
+import org.springframework.stereotype.Component;
+
 import kr.ai.janus.common.exception.BusinessException;
 import kr.ai.janus.common.exception.ErrorCode;
 import kr.ai.janus.parsing.model.PreScanSummary;
@@ -8,20 +10,15 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * 1차 스캔 결과 검증 + 본인 선택 검증
- * 통과하면 "화자 정확히 2명 · owner가 그 두 명 중 하나"가 보장되어
- * 이후 2차 스캔(SpeakerRole.resolve)의 전제가 성립한다.
  */
+@Component
 @Slf4j
 public final class PreScanValidator {
 
     /** 1:1 대화 = 두 명 */
     private static final int REQUIRED_SPEAKER_COUNT = 2;
 
-    private final PreScanThresholds thresholds;
-
-    public PreScanValidator(PreScanThresholds thresholds) {
-        this.thresholds = thresholds;
-    }
+    private final PreScanThresholds thresholds = PreScanThresholds.defaults();
 
     /** 분석 가능한 1:1 대화인지 검증한다 (본인 선택 전 단계에서 사용). */
     public void validateChat(PreScanSummary summary) {
