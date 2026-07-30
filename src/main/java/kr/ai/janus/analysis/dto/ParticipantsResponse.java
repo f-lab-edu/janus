@@ -12,11 +12,18 @@ public record ParticipantsResponse(
         LocalDateTime startedAt,
         LocalDateTime endedAt) {
 
+    private ParticipantsResponse(PreScanSummary summary) {
+        this(
+                summary.speakerCounts().stream()
+                        .map(SpeakerCount::name)
+                        .toList(),
+                summary.messageCount(),
+                summary.startedAt(),
+                summary.endedAt()
+        );
+    }
+
     public static ParticipantsResponse from(PreScanSummary summary) {
-        List<String> speakers = summary.speakerCounts().stream()
-                .map(SpeakerCount::name)
-                .toList();
-        return new ParticipantsResponse(
-                speakers, summary.messageCount(), summary.startedAt(), summary.endedAt());
+        return new ParticipantsResponse(summary);
     }
 }
