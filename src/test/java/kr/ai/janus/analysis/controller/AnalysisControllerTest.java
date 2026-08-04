@@ -20,6 +20,8 @@ import kr.ai.janus.auth.service.TokenVerifier;
 import kr.ai.janus.config.CorsProperties;
 import kr.ai.janus.config.SecurityConfig;
 import kr.ai.janus.parsing.grammar.CsvMessageParser;
+import kr.ai.janus.parsing.grammar.IosTxtMessageParser;
+import kr.ai.janus.parsing.grammar.MessageParserSelector;
 import kr.ai.janus.parsing.scan.AnalysisScanner;
 import kr.ai.janus.parsing.scan.PreScanner;
 import kr.ai.janus.parsing.validation.PreScanValidator;
@@ -29,7 +31,8 @@ import kr.ai.janus.parsing.validation.PreScanValidator;
  * 엔드포인트 → 파싱 → 검증 → 분석까지 실제로 도는지 검증
  */
 @WebMvcTest(AnalysisController.class)
-@Import({SecurityConfig.class, AnalysisService.class, CsvMessageParser.class,
+@Import({SecurityConfig.class, AnalysisService.class,
+        MessageParserSelector.class, CsvMessageParser.class, IosTxtMessageParser.class,
         PreScanner.class, PreScanValidator.class, AnalysisScanner.class})
 @EnableConfigurationProperties(CorsProperties.class)
 class AnalysisControllerTest {

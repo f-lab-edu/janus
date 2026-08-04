@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+import java.util.Locale;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
@@ -25,9 +25,10 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Component
 @Slf4j
-public final class CsvMessageParser {
+public final class CsvMessageParser implements MessageParser {
 
     private static final char BOM = '\uFEFF';
+    private static final String CSV_EXTENSION = ".csv";
     private static final String DATE_HEADER = "Date";
     private static final String USER_HEADER = "User";
     private static final String MESSAGE_HEADER = "Message";
@@ -38,6 +39,12 @@ public final class CsvMessageParser {
             .setSkipHeaderRecord(true)
             .build();
 
+    @Override
+    public boolean supports(String fileName) {
+        return fileName.toLowerCase(Locale.ROOT).endsWith(CSV_EXTENSION);
+    }
+
+    @Override
     public List<RawMessage> parse(Reader reader) {
         List<RawMessage> messages = new ArrayList<>();
 
