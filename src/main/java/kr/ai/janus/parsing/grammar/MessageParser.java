@@ -10,6 +10,10 @@ import kr.ai.janus.parsing.model.RawMessage;
  */
 public interface MessageParser {
 
+    /**
+     * @param fileName null이 아니고 비어 있지 않은 파일 이름
+     */
     boolean supports(String fileName);
+
     List<RawMessage> parse(Reader reader);
 }
