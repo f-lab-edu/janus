@@ -13,7 +13,8 @@ import kr.ai.janus.analysis.dto.AnalysisResponse;
 import kr.ai.janus.analysis.dto.ParticipantsResponse;
 import kr.ai.janus.common.exception.BusinessException;
 import kr.ai.janus.common.exception.ErrorCode;
-import kr.ai.janus.parsing.grammar.CsvMessageParser;
+import kr.ai.janus.parsing.grammar.MessageParser;
+import kr.ai.janus.parsing.grammar.MessageParserSelector;
 import kr.ai.janus.parsing.model.ParseStats;
 import kr.ai.janus.parsing.model.PreScanSummary;
 import kr.ai.janus.parsing.model.RawMessage;
@@ -29,7 +30,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AnalysisService {
 
-    private final CsvMessageParser csvMessageParser;
+    private final MessageParserSelector messageParserSelector;
     private final PreScanner preScanner;
     private final PreScanValidator preScanValidator;
     private final AnalysisScanner analysisScanner;
@@ -49,8 +50,10 @@ public class AnalysisService {
     }
 
     private List<RawMessage> parse(MultipartFile file) {
+        MessageParser parser = messageParserSelector.select(file.getOriginalFilename());
+
         try (Reader reader = new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8)) {
-            return csvMessageParser.parse(reader);
+            return parser.parse(reader);
         } catch (IOException e) {
             throw new BusinessException(ErrorCode.FILE_READ_FAILED, e);
         }
