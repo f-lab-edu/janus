@@ -24,7 +24,7 @@ public final class MessageParserSelector {
 
     public MessageParser select(String fileName) {
         if (hasNoFileName(fileName)) {
-            log.warn("파일 이름 없는 업로드");
+            log.error("파일 이름 없는 업로드");
             throw new BusinessException(ErrorCode.UNSUPPORTED_FILE_FORMAT);
         }
 
