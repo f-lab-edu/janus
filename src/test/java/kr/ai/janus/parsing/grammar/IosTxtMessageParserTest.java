@@ -68,6 +68,22 @@ class IosTxtMessageParserTest {
     }
 
     @Test
+    void 기기가_24시간제면_오전_오후_없이_내보낸다() {
+        String h24 = """
+                2026. 8. 13. 14:19, 민지 : 오후
+                2026. 8. 13. 0:07, 민지 : 자정
+                2026. 8. 13. 9:30, 민지 : 오전
+                """;
+
+        List<RawMessage> messages = parse(h24);
+
+        assertThat(messages).hasSize(3);
+        assertThat(messages.get(0).sentAt()).isEqualTo(LocalDateTime.of(2026, 8, 13, 14, 19));
+        assertThat(messages.get(1).sentAt()).isEqualTo(LocalDateTime.of(2026, 8, 13, 0, 7));
+        assertThat(messages.get(2).sentAt()).isEqualTo(LocalDateTime.of(2026, 8, 13, 9, 30));
+    }
+
+    @Test
     void 여러_줄_메시지를_한_건으로_합치고_줄바꿈을_남긴다() {
         RawMessage multiLine = parse(SAMPLE).get(2);
 

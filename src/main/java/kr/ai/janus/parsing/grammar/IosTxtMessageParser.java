@@ -19,7 +19,7 @@ import kr.ai.janus.parsing.model.RawMessage;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 아이폰 카카오톡 txt(`yyyy. M. d. 오전/오후 h:mm, 이름 : 내용`)를 읽어 RawMessage 목록으로 만든다.
+ * 아이폰 카카오톡 txt(`yyyy. M. d. [오전/오후] h:mm, 이름 : 내용`)를 읽어 RawMessage 목록으로 만든다.
  */
 @Component
 @Slf4j
@@ -29,17 +29,23 @@ public final class IosTxtMessageParser implements MessageParser {
 
     private static final String BOM = "\uFEFF";
 
-    /** 예시) 2026. 5. 22. 오후 4:02, 민지 : 점심 뭐 먹었어? */
+    /**
+     * 예시) 2026. 5. 22. 오후 4:02, 민지 : 점심 뭐 먹었어?   (기기가 12시간제)
+     *      2026. 5. 22. 16:02, 민지 : 점심 뭐 먹었어?      (기기가 24시간제)
+     */
     private static final Pattern MESSAGE_START_LINE = Pattern.compile(
-            "^(?<sentAt>\\d{4}\\. \\d{1,2}\\. \\d{1,2}\\. (?:오전|오후) \\d{1,2}:\\d{2}), (?<speakerName>.+?) : (?<text>.*)$");
+            "^(?<sentAt>\\d{4}\\. \\d{1,2}\\. \\d{1,2}\\. (?:(?:오전|오후) )?\\d{1,2}:\\d{2}), (?<speakerName>.+?) : (?<text>.*)$");
 
     /** 예시) 2026년 5월 22일 목요일 */
     private static final Pattern DATE_DIVIDER_LINE = Pattern.compile(
             "^\\d{4}년 \\d{1,2}월 \\d{1,2}일 .+$");
 
-    /** 예시) 2025. 5. 22. 오후 4:02 */
+    /**
+     * 예시) 2026. 5. 22. 오후 4:02   (기기가 12시간제)
+     *      2026. 5. 22. 16:02      (기기가 24시간제)
+     */
     private static final DateTimeFormatter SENT_AT_FORMAT =
-            DateTimeFormatter.ofPattern("yyyy. M. d. a h:mm", Locale.KOREAN);
+            DateTimeFormatter.ofPattern("yyyy. M. d. [a h:mm][H:mm]", Locale.KOREAN);
 
     @Override
     public boolean supports(String fileName) {
